@@ -40,7 +40,7 @@
             flex-shrink: 0;
             height: 300px;
             opacity: 0.6;
-            transform: scale(0.9) translateZ(0);
+            transform: scale(0.9) translateZ(0); 
             object-fit: cover;
             will-change: transform, opacity;
             backface-visibility: hidden;
@@ -51,11 +51,9 @@
             z-index: 1;
         }
         .carousel-item.clone {
-            
-position: relative;
-transition: 0.1s;
-
-       }
+            /* Remove transition for clone items */
+            transition: none;
+        }
     </style>
 </head>
 <body>
@@ -99,18 +97,16 @@ transition: 0.1s;
             
             if (skipTransition) {
                 carouselWrapper.style.transition = 'none';
+                items.forEach(item => item.style.transition = 'none');
             } else {
                 carouselWrapper.style.transition = "transform 0.8s cubic-bezier(0.25, 1.5, 0.5, 1)";
+                items.forEach(item => item.style.transition = "all 0.8s cubic-bezier(0.25, 1.5, 0.5, 1)");
             }
             
             carouselWrapper.style.transform = `translateX(${offset}px)`;
             
             items.forEach((item, index) => {
-                if (index === currentIndex) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
+                item.classList.toggle('active', index === currentIndex);
             });
         }
 
@@ -121,28 +117,25 @@ transition: 0.1s;
             currentIndex++;
             updateCarousel();
 
-            if (currentIndex >= totalOriginalItems + 2) {
-                setTimeout(() => {
+            const handleTransitionEnd = () => {
+                carouselWrapper.removeEventListener('transitionend', handleTransitionEnd);
+                
+                if (currentIndex >= totalOriginalItems + 2) {
                     currentIndex = 2;
                     updateCarousel(true);
-                    
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            updateCarousel();
-                            isTransitioning = false;
-                        });
-                    });
-                }, 790);      } else {
-                setTimeout(() => {
-                    isTransitioning = false;
-                }, 800);
-            }
+                    // Force reflow to apply reset, then re-enable transitions
+                    void carouselWrapper.offsetHeight;
+                }
+                
+                isTransitioning = false;
+            };
+
+            carouselWrapper.addEventListener('transitionend', handleTransitionEnd);
         }
 
         updateCarousel(true);
-        requestAnimationFrame(() => {
-            carouselWrapper.style.transition = "transform 0.8s cubic-bezier(0.25, 1.5, 0.5, 1)";
-        });
+        // Initialize with active class
+        items[currentIndex].classList.add('active');
         
         setInterval(moveCarousel, 1000);
         
@@ -156,4 +149,3 @@ transition: 0.1s;
     </script>
 </body>
 </html>
-
